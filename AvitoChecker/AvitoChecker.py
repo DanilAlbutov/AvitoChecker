@@ -1,19 +1,17 @@
 import telebot
-import Config
 import random
 import time
 import requests
 import cfscrape
 import lxml
+
 from bs4 import BeautifulSoup
 from telebot import types
 
-
+DEBUG = False
 
 TOKEN = '1262884038:AAH9rbl53THU28HzMn9Vo9dMTipPwE_syoU'
 bot = telebot.TeleBot(TOKEN)
-
-
 
 users = ['484338199'] #, '0']
 urls = [
@@ -38,33 +36,15 @@ urls = [
 ]
 
 
-#@bot.message_handler()
+#@bot.message_handler() ID
 #def sas(message):
 #    print(message.chat.id)
 #    return
 
 def parsePage(text):
-    try:
-        soup = BeautifulSoup(text,'lxml')
-        items = soup.find('div', class_ = 'snippet').find('div', class_= 'item__line').find('div', class_='item-photo').find('a',class_='item-slider').get('href');
-        #for item in items:
-        print(items)
-        #container = soup.select('div.item.item_table.clearfix.js-catalog-item-enum.item-with-contact.js-item-extended')
-        #url_block = container[0].select('a.item-slider item-slider--1-1')
-        #url_block = item.select_one('a.item-slider item-slider--1-1')
-        #href = url_block.get('href')   
-        #print(href)
-    except Exception:
-        print(f'exception: {Exception}')
-
-    return
-
-def getContent(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    link = soup.find('div', class_ = 'snippet snippet-horizontal')
-    link = link.find('a').get('href')
-    print(link)
-
+    soup = BeautifulSoup(text,'lxml')
+    link = soup.find('div', class_ = 'snippet').find('div', class_= 'item__line').find('div', class_='item-photo').find('a',class_='item-slider').get('href')
+    return link
 
 def checkAvito():
     scraper = cfscrape.create_scraper()      
@@ -80,13 +60,13 @@ def checkAvito():
 
     #    time.sleep(0.25)
     page = scraper.get(urls[0]["url"]).text
-    parsePage(page)
+    link = parsePage(page)
+    msg = f'Новое объявление!\nhttps://www.avito.ru{link}'
+    print(f'Sending: {msg}')
+    bot.send_message(users[0], msg)
     return
 
-def beautifyData():
-    return
-
-def main():
+def Routine():
     while (True):
         print('Checking updates..')
         checkAvito()
@@ -98,7 +78,18 @@ def main():
         #        bot.send_message(user, 'test')
         time.sleep(60)
     return
-  
+
+def main():
+    if not DEBUG:
+        try:
+            Routine()
+        except Exception:
+            print("Runtime exception occuried")
+            main()
+    else:
+        Routine()
+    return
+
 # RUN
 #bot.polling(none_stop=True)
 
