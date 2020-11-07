@@ -6,7 +6,7 @@ import cfscrape
 import lxml
 
 from bs4 import BeautifulSoup
-from telebot import types
+#from telebot import types
 
 DEBUG = False
 
@@ -17,12 +17,12 @@ isInited = None
 
 users = ['484338199'] #, '0']
 urls = [
-    {
-        'url': 'https://www.avito.ru/ulyanovsk/avtomobili?radius=100&s=104&proprofile=1',
-        'alias': 'все машины Ульяновск',
-        'new_data': False,
-        'data': None
-    },
+    #{
+    #    'url': 'https://www.avito.ru/ulyanovsk/avtomobili?radius=100&s=104&proprofile=1',
+    #    'alias': 'все машины Ульяновск',
+    #    'new_data': False,
+    #    'data': None
+    #},
     {
         'url': 'https://www.avito.ru/ulyanovsk/avtomobili/vaz_lada/2104-ASgBAgICAkTgtg3GmSjitg3Imig?s=104',
         'alias': 'четверки',
@@ -49,18 +49,29 @@ urls = [
     }
 ]
 
-@bot.message_handler() 
-def sas(message):
-    print(message.chat.id)
-    users.append(message.chat.id)
-    if message.text == 'start checking' :
-        main()
-    return
+#@bot.message_handler() 
+#def sas(message):
+#    print(message.chat.id)    
+#    if message.text == 'startcheck' :
+#        bot.send_message(message.chat.id, f'user with id:{message.chat.id} starting bot')
+#        main()
+#    return
 
 def parsePage(text):
     soup = BeautifulSoup(text,'lxml')
-    link = soup.find('div', class_ = 'snippet').find('div', class_= 'item__line').find('div', class_='item-photo').find('a',class_='item-slider').get('href')
-    return f'https://www.avito.ru{link}'
+    items = soup.find_all('div',class_='js-catalog-item-enum')
+    cards = []
+    for item in items:
+        cards.append(
+            {
+                'last data':item.find('div', class_='snippet-date-info').get('data-tooltip'),
+                'upgrade':item.find('div', class_ = 'styles-arrow-3WY7X'),
+                'link':item.find('a', class_ = 'snippet-link').get('href')
+
+            }
+            )
+
+    return f'https://www.avito.ru{cards[0]["link"]}'
 
 def checkAvito():
     global isInited
@@ -87,7 +98,8 @@ def checkAvito():
 
                 msg = f'Новое объявление!\n{link}'
                 print(f'Sending: {msg}')
-                bot.send_message(users[0], msg)
+                for user in users:
+                    bot.send_message(user, msg)
             else:
                 url['new_data'] = False
 
@@ -102,6 +114,7 @@ def Routine():
     return
 
 def main():
+    
     if not DEBUG:
         try:
             Routine()
@@ -113,6 +126,8 @@ def main():
     return
 
 if __name__ == '__main__':
+    for user in users:       
+        bot.send_message(user, '-----Bot started working-----')
     isInited = False
-    bot.polling()
+    #bot.polling(none_stop=True)
     main()
